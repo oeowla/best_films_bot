@@ -1,17 +1,19 @@
 import asyncio
 
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.filters import Command
 
+from database.db import init_db
 from config import config
-from handlers.films_handlers import (
-    start_command,
-    go_home,
-    help_command,
-    process_action_selection
+from handlers import (
+    base_handlers, films_handlers, category_handlers, genre_handlers
 )
+from handlers.user_handlers import (
+    create_category_handlers, create_film_handlers, create_genre_handlers
+)
+
+init_db()
 
 
 async def main():
@@ -20,16 +22,20 @@ async def main():
     bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
     dp = Dispatcher(storage=MemoryStorage())
 
-    # Регистрация обработчиков сообщений и команд
-    dp.message.register(start_command, Command('start'))
-    dp.message.register(go_home, F.text == '🏠 Домой')
-    dp.message.register(help_command, F.text == '❓ Помощь')
-    dp.message.register(process_action_selection, F.text == '🎬 Выбрать фильм')
+    # Подключение роутеров
+    dp.include_router(base_handlers.router)
+    dp.include_router(films_handlers.router)
+    dp.include_router(category_handlers.router)
+    dp.include_router(genre_handlers.router)
+    dp.include_router(create_film_handlers.router)
+    dp.include_router(create_category_handlers.router)
+    dp.include_router(create_genre_handlers.router)
 
     # Установка команд меню бота
     await bot.set_my_commands([
         types.BotCommand(command='start', description='Начать работу')
     ])
+    dp
     try:
         # Запуск бота в режиме опроса сервера telegram
         print('Бот успешно запущен!')
