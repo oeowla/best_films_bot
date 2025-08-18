@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, ForeignKey, Integer, String, Table, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -9,22 +9,34 @@ class Base(DeclarativeBase):
     """Базовый класс для всех моделей."""
 
 
-# Ассоциативная таблица для связи фильмов и жанров
 film_genre = Table(
-    'film_genre',
-    Base.metadata,
+    'film_genre', Base.metadata,
     Column('film_id', ForeignKey('films.id'), primary_key=True),
     Column('genre_id', ForeignKey('genres.id'), primary_key=True),
-    comment='Связь между фильмами и жанрами'
 )
 
-#  Ассоциативная таблица для связи фильмов и категорий
 film_category = Table(
-    'film_category',
-    Base.metadata,
+    'film_category', Base.metadata,
     Column('film_id', ForeignKey('films.id'), primary_key=True),
     Column('category_id', ForeignKey('categories.id'), primary_key=True),
-    comment='Связь между фильмами и категориями'
+)
+
+user_film = Table(
+    'user_film', Base.metadata,
+    Column('user_id', ForeignKey('user.id'), primary_key=True),
+    Column('film_id', ForeignKey('films.id'), primary_key=True),
+)
+
+user_category = Table(
+    'user_film', Base.metadata,
+    Column('user_id', ForeignKey('user.id'), primary_key=True),
+    Column('category_id', ForeignKey('category.id'), primary_key=True),
+)
+
+user_genre = Table(
+    'user_film', Base.metadata,
+    Column('user_id', ForeignKey('user.id'), primary_key=True),
+    Column('genre_id', ForeignKey('genre.id'), primary_key=True),
 )
 
 
@@ -33,21 +45,14 @@ class Film(Base):
     __tablename__ = 'films'
 
     id: Mapped[int] = mapped_column(
-        Integer,
-        primary_key=True,
-        comment='id фильма'
-    )
-    title: Mapped[str] = mapped_column(
-        String,
-        comment='Название фильма'
-    )
-    description: Mapped[str] = mapped_column(
-        String,
-        nullable=True,
-        comment='Описание фильма'
-    )
+        Integer, primary_key=True)
 
-    # Связь с жанрами
+    title: Mapped[str] = mapped_column(
+        String)
+
+    description: Mapped[str] = mapped_column(
+        String, nullable=True)
+
     genres: Mapped[List['Genre']] = relationship(
         secondary=film_genre,
         back_populates='films',
@@ -55,13 +60,20 @@ class Film(Base):
         cascade='save-update, merge',
     )
 
-    # Связь с категориями
     categories: Mapped[List['Category']] = relationship(
         secondary=film_category,
         back_populates='films',
         lazy='selectin',
         cascade='save-update, merge',
     )
+
+    users: Mapped[List['User']] = relationship(
+        secondary=user_film,
+        back_populates='films',
+        lazy='select',
+        cascade='save-update, merge',
+    )
+
 
     def __repr__(self) -> str:
         return f'Film(id={self.id}, title={self.title!r})'
@@ -72,22 +84,22 @@ class Genre(Base):
     __tablename__ = 'genres'
 
     id: Mapped[int] = mapped_column(
-        Integer,
-        primary_key=True,
-        comment='id жанра'
-    )
-    name: Mapped[str] = mapped_column(
-        String(100),
-        unique=True,
-        nullable=False,
-        comment='Название жанра'
-    )
+        Integer, primary_key=True)
 
-    # Обратная связь с фильмами
+    name: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False)
+
     films: Mapped[List['Film']] = relationship(
         secondary=film_genre,
         back_populates='genres',
         lazy='selectin',
+        cascade='save-update, merge',
+    )
+
+    users: Mapped[List['User']] = relationship(
+        secondary=user_film,
+        back_populates='genres',
+        lazy='select',
         cascade='save-update, merge',
     )
 
@@ -100,18 +112,11 @@ class Category(Base):
     __tablename__ = 'categories'
 
     id: Mapped[int] = mapped_column(
-        Integer,
-        primary_key=True,
-        comment='id категории'
-    )
-    name: Mapped[str] = mapped_column(
-        String(100),
-        unique=True,
-        nullable=False,
-        comment='Название категории'
-    )
+        Integer, primary_key=True)
 
-    # Обратная связь с фильмами
+    name: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False)
+
     films: Mapped[List['Film']] = relationship(
         secondary=film_category,
         back_populates='categories',
@@ -119,5 +124,49 @@ class Category(Base):
         cascade='save-update, merge',
     )
 
+    users: Mapped[List['User']] = relationship(
+        secondary=user_film,
+        back_populates='categories',
+        lazy='select',
+        cascade='save-update, merge',
+    )
     def __repr__(self) -> str:
         return f'Category(id={self.id}, name={self.name!r})'
+    
+
+class User(Base):
+    """Модель пользователя"""
+    __tablename__ = 'users'
+
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True)
+
+    user_id: Mapped[int] = mapped_column(
+        Integer, unique=True)
+
+    name: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False)
+
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean, default=False)
+    
+    films: Mapped[List['Film']] = relationship(
+        secondary=user_film,
+        back_populates='users',
+        lazy='select',
+        cascade='save-update, merge',
+    )
+
+    categories: Mapped[List['Category']] = relationship(
+        secondary=user_category,
+        back_populates='users',
+        lazy='select',
+        cascade='save-update, merge',
+    )
+
+    genres: Mapped[List['Genre']] = relationship(
+        secondary=user_genre,
+        back_populates='users',
+        lazy='select',
+        cascade='save-update, merge',
+    )

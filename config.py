@@ -9,6 +9,7 @@ class Config:
     if not BOT_TOKEN:
         raise ValueError('Токен бота не найден в .env файле')
     DATABASE_URL = os.getenv('DATABASE_URL')
+    ADMIN_IDS = os.getenv('ADMIN_IDS')
 
 
 config = Config()
