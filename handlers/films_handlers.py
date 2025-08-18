@@ -4,8 +4,9 @@ from aiogram.fsm.context import FSMContext
 
 
 from fsm.states import FilmStates
-from database.db import get_db
+
 from database.crud.film import get_film_by_id
+from database.db import AsyncSessionLocal
 
 from keyboards.base_kb import get_main_keyboards
 from keyboards.films_kb import get_film_keyboard
@@ -20,8 +21,8 @@ async def show_film(
 ):
     """Окно фильма"""
     film_id = int(callback.data.split('_')[1])
-    db = next(get_db())
-    film = get_film_by_id(db, film_id)
+    async with AsyncSessionLocal() as db:
+        film = await get_film_by_id(db, film_id)
 
     categories = ", ".join([c.name for c in film.categories])
     genres = ", ".join([g.name for g in film.genres])

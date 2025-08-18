@@ -4,13 +4,13 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.crud.category import get_all_category
-from database.db import get_db
+from database.db import AsyncSessionLocal
 
 
 async def get_category_selection_keyboard() -> InlineKeyboardMarkup:
     """Клавиатура выбора категории фильма"""
-    db = next(get_db())
-    categories = get_all_category(db)
+    async with AsyncSessionLocal() as db:
+        categories = await get_all_category(db)
     builder = InlineKeyboardBuilder()
     for category in categories:
         builder.button(
@@ -41,15 +41,15 @@ async def get_categories_keyboard(
     if selected_ids is None:
         selected_ids = []
 
-    db = next(get_db())
-    categories = get_all_category(db)
+    async with AsyncSessionLocal() as db:
+        categories = await get_all_category(db)
     builder = InlineKeyboardBuilder()
 
     for category in categories:
         emoji = '✅' if category.id in selected_ids else '🔘'
         builder.button(
             text=f'{emoji} {category.name}',
-            callback_data=f'сategory_{category.id}'
+            callback_data=f'toggle_category_{category.id}'
         )
 
     builder.button(text='⬅️ Назад', callback_data='go_category_selection')

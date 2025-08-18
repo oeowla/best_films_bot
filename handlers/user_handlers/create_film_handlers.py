@@ -4,7 +4,7 @@ from aiogram import Router, types, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 
-from database.db import get_db
+from database.db import AsyncSessionLocal
 from database.crud.film import add_film
 from fsm.states import FilmStates
 from keyboards.category_kb import get_categories_keyboard
@@ -21,7 +21,10 @@ async def new_film(callback: types.CallbackQuery, state: FSMContext):
         'Введите название фильма', parse_mode="HTML"
     )
     await state.set_state(FilmStates.waiting_for_title)
-    await state.update_data(selected_categories=[])
+    await state.update_data(
+        selected_categories=[],
+        selected_genres=[]
+    )
 
 
 @router.message(StateFilter(FilmStates.waiting_for_title))
@@ -106,14 +109,13 @@ async def finish_genres(callback: types.CallbackQuery, state: FSMContext):
 async def process_film_description(message: types.Message, state: FSMContext):
     """Сохранение фильма с выбранными категориями и жанрами"""
     data = await state.get_data()
-    db = next(get_db())
-
-    add_film(
-        db,
-        title=data['title'],
-        description=message.text,
-        category_ids=data['selected_categories'],
-        genre_ids=data['selected_genres']
-    )
+    async with AsyncSessionLocal() as db:
+        await add_film(
+            db,
+            title=data['title'],
+            description=message.text,
+            category_ids=data['selected_categories'],
+            genre_ids=data['selected_genres']
+        )
     await message.answer(f'Фильм {data["title"]} успешно добавлен!')
     await state.clear()

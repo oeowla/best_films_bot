@@ -1,29 +1,37 @@
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 
 from database.models import Genre
 
 
-def get_all_genre(db: Session) -> Genre:
+async def get_all_genre(db: AsyncSession) -> list[Genre]:
     """Возвращает все жанры"""
-    return db.query(Genre).all()
+    result = await db.execute(select(Genre))
+    return result.scalars().all()
 
 
-def get_genre(db: Session, genre_id: int) -> Genre:
+async def get_genre(db: AsyncSession, genre_id: int) -> Genre | None:
     """Получение жанра по id"""
-    return db.query(Genre).filter(Genre.id == genre_id).first()
+    result = await db.execute(select(Genre).where(Genre.id == genre_id))
+    return result.scalar_one_or_none()
 
 
-def get_films_in_genre(db: Session, genre_id: int) -> Genre:
+async def get_films_in_genre(db: AsyncSession, genre_id: int) -> list:
     """Возвращает все связанные фильмы"""
-    genre = db.query(
-        Genre).options(joinedload(Genre.films)).get(genre_id)
+    result = await db.execute(
+        select(Genre)
+        .where(Genre.id == genre_id)
+        .options(selectinload(Genre.films))
+    )
+    genre = result.scalar_one_or_none()
     return genre.films if genre else []
 
 
-def add_genre(db: Session, name: str):
+async def add_genre(db: AsyncSession, name: str) -> Genre:
     """Создание нового жанра"""
     new_genre = Genre(name=name)
     db.add(new_genre)
-    db.commit()
-    db.refresh(new_genre)
+    await db.commit()
+    await db.refresh(new_genre)
     return new_genre

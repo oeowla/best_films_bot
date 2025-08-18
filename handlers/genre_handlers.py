@@ -6,7 +6,7 @@ from aiogram.filters import StateFilter
 from fsm.states import FilmStates
 from keyboards.genre_kb import get_genre_selection_keyboard
 from keyboards.films_kb import get_all_films_keyboard
-from database.db import get_db
+from database.db import AsyncSessionLocal
 from database.crud.genre import get_genre
 router = Router()
 
@@ -34,14 +34,13 @@ async def choice_genre_from_all(
 ):
     """Обработка выбора конкретного жанра из списка."""
     genre_id = int(callback.data.split('_')[1])
-    db = next(get_db())
 
     await state.update_data({
         'back_from': 'genre',
         'back_id': genre_id
     })
-
-    genre = get_genre(db, genre_id)
+    async with AsyncSessionLocal() as db:
+        genre = await get_genre(db, genre_id)
 
     await state.set_state(FilmStates.genre_window)
     await callback.message.edit_text(
@@ -59,7 +58,7 @@ async def go_genre_selection(
     """Возврат к выбору жанра"""
     await state.set_state(FilmStates.genre_selection)
     await callback.message.edit_text(
-        'Выбери жанр фильма:',
+        '🎭 Выберите жанр:',
         parse_mode="HTML",
         reply_markup=await get_genre_selection_keyboard()
     )
@@ -70,14 +69,13 @@ async def go_genre_selection(
 async def choice_genre(callback: CallbackQuery, state: FSMContext):
     """Возврат к жанру"""
     genre_id = int(callback.data.split('_')[1])
-    db = next(get_db())
 
     await state.update_data({
         'back_from': 'genre',
         'back_id': genre_id
     })
-
-    genre = get_genre(db, genre_id)
+    async with AsyncSessionLocal() as db:
+        genre = await get_genre(db, genre_id)
 
     await state.set_state(FilmStates.genre_window)
     await callback.message.edit_text(

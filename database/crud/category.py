@@ -1,29 +1,38 @@
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 
 from database.models import Category
 
 
-def get_all_category(db: Session) -> Category:
+async def get_all_category(db: AsyncSession) -> list[Category]:
     """Возвращает все категории"""
-    return db.query(Category).all()
+    result = await db.execute(select(Category))
+    return result.scalars().all()
 
 
-def get_category(db: Session, category_id: int) -> Category:
+async def get_category(db: AsyncSession, category_id: int) -> Category | None:
     """Получение категории по id"""
-    return db.query(Category).filter(Category.id == category_id).first()
+    result = await db.execute(select(Category).where(
+        Category.id == category_id))
+    return result.scalar_one_or_none()
 
 
-def get_films_in_category(db: Session, category_id: int) -> Category:
+async def get_films_in_category(db: AsyncSession, category_id: int) -> list:
     """Возвращает все связанные фильмы"""
-    category = db.query(
-        Category).options(joinedload(Category.films)).get(category_id)
+    result = await db.execute(
+        select(Category)
+        .where(Category.id == category_id)
+        .options(selectinload(Category.films))
+    )
+    category = result.scalar_one_or_none()
     return category.films if category else []
 
 
-def add_category(db: Session, name: str):
+async def add_category(db: AsyncSession, name: str) -> Category:
     """Создание новой категории"""
     new_category = Category(name=name)
     db.add(new_category)
-    db.commit()
-    db.refresh(new_category)
+    await db.commit()
+    await db.refresh(new_category)
     return new_category

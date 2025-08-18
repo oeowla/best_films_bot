@@ -13,11 +13,10 @@ from handlers.user_handlers import (
     create_category_handlers, create_film_handlers, create_genre_handlers
 )
 
-init_db()
-
 
 async def main():
     """Функция запуска бота"""
+    await init_db()
     # Инициализация бота и диспетчера
     bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
     dp = Dispatcher(storage=MemoryStorage())

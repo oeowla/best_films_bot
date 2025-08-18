@@ -1,43 +1,48 @@
 from typing import List
-
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, insert
 
 from database.models import Film, film_category, film_genre
 
 
-def get_all_films(db: Session) -> Film:
+async def get_all_films(db: AsyncSession) -> list[Film]:
     """Возвращает все фильмы"""
-    return db.query(Film).all()
+    result = await db.execute(select(Film))
+    return result.scalars().all()
 
 
-def get_film_by_id(db: Session, film_id: int) -> Film:
+async def get_film_by_id(db: AsyncSession, film_id: int) -> Film | None:
     """Возвращает фильм по id"""
-    return db.query(Film).filter(Film.id == film_id).first()
+    result = await db.execute(select(Film).where(Film.id == film_id))
+    return result.scalar_one_or_none()
 
 
-def add_film(
-    db: Session, title: str, description: str,
-    category_ids: List[int], genre_ids: List[int]
+async def add_film(
+    db: AsyncSession, 
+    title: str, 
+    description: str,
+    category_ids: List[int], 
+    genre_ids: List[int]
 ) -> Film:
     """Создание нового фильма"""
     new_film = Film(title=title, description=description)
     db.add(new_film)
-    db.flush()
+    await db.flush()
 
     if category_ids:
-        stmt = film_category.insert().values([
-            {'film_id': new_film.id, 'category_id': cat_id}
-            for cat_id in category_ids
-        ])
-        db.execute(stmt)
+        await db.execute(
+            insert(film_category),
+            [{'film_id': new_film.id, 'category_id': cat_id
+              } for cat_id in category_ids]
+        )
 
     if genre_ids:
-        stmt = film_genre.insert().values([
-            {'film_id': new_film.id, 'genre_id': genre_id}
-            for genre_id in genre_ids
-        ])
-        db.execute(stmt)
-    db.commit()
-    db.refresh(new_film)
+        await db.execute(
+            insert(film_genre),
+            [{'film_id': new_film.id, 'genre_id': genre_id
+              } for genre_id in genre_ids]
+        )
 
+    await db.commit()
+    await db.refresh(new_film)
     return new_film

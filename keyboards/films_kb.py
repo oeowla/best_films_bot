@@ -3,8 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.crud.category import get_films_in_category
 from database.crud.genre import get_films_in_genre
-from database.db import get_db
-
+from database.db import AsyncSessionLocal
 
 async def get_film_keyboard(
         back_from: str, back_id: int) -> InlineKeyboardMarkup:
@@ -25,12 +24,11 @@ async def get_film_keyboard(
 async def get_all_films_keyboard(
         id: int, is_genre=False) -> InlineKeyboardMarkup:
     """Клавиатура всех фильмов"""
-    db = next(get_db())
-
-    if is_genre:
-        films = get_films_in_genre(db, genre_id=id)
-    else:
-        films = get_films_in_category(db, category_id=id)
+    async with AsyncSessionLocal() as db:
+        if is_genre:
+            films = await get_films_in_genre(db, genre_id=id)
+        else:
+            films = await get_films_in_category(db, category_id=id)
 
     builder = InlineKeyboardBuilder()
 

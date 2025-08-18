@@ -2,7 +2,7 @@ from aiogram import Router, types, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 
-from database.db import get_db
+from database.db import AsyncSessionLocal
 from database.crud.genre import add_genre
 from fsm.states import FilmStates
 
@@ -23,7 +23,7 @@ async def new_genre(callback: types.CallbackQuery, state: FSMContext):
 async def process_genre_name(message: types.Message, state: FSMContext):
     """Сохранение категории в БД"""
     name = message.text
-    db = next(get_db())
-    add_genre(db, name=name)
+    async with AsyncSessionLocal() as db:
+        await add_genre(db, name=name)
     await message.answer(f'Жанр {name} успешно добавлен')
     await state.clear()

@@ -1,32 +1,32 @@
-from sqlalchemy import create_engine
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+
 from config import Config
 from .models import Base
 
-# Создаем 'движок' - основной интерфейс к базе данных
-# echo=True - будет показывать SQL-запросы в консоли (удобно для отладки)
-engine = create_engine(
-    Config.DATABASE_URL, connect_args={"check_same_thread": False}, echo=True
-)
-# SessionLocal - это фабрика для создания сессий БД
-# autocommit=False - изменения не применяются автоматически
-# autoflush=False - не отправляем запросы без необходимости
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
+# Создаем асинхронный движок для SQLite
+engine = create_async_engine(Config.DATABASE_URL, echo=True)
+
+# Создаем фабрику асинхронных сессий
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
 )
 
 
-def init_db():
-    # Создаёт все таблицы
-    Base.metadata.create_all(bind=engine)
+async def init_db():
+    """Создает все таблицы в базе данных"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
-def get_db():
-    """Генератор сессий для DI"""
-    db = SessionLocal()
-    try:
-        yield db  # Отдаем сессию для использования
-    finally:
-        db.close()  # Закрываем сессию в любом случае
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Корректный асинхронный генератор сессий для DI"""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
