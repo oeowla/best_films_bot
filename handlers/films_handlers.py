@@ -15,36 +15,35 @@ router = Router()
 
 
 @router.callback_query(F.data.startswith('film_'))
-async def show_film(
-    callback: CallbackQuery,
-    state: FSMContext
-):
+async def show_film(callback: CallbackQuery, state: FSMContext):
     """Окно фильма"""
     film_id = int(callback.data.split('_')[1])
+    telegram_id = callback.from_user.id
+
     async with AsyncSessionLocal() as db:
         film = await get_film_by_id(db, film_id)
+        categories = ", ".join([c.name for c in film.categories])
+        genres = ", ".join([g.name for g in film.genres])
 
-    categories = ", ".join([c.name for c in film.categories])
-    genres = ", ".join([g.name for g in film.genres])
+        text = (
+            f"🎬 <b>{film.title}</b>\n\n"
+            f"📝 <i>{film.description}</i>\n\n"
+            f"📂 Категории: {categories}\n"
+            f"🏷️ Жанры: {genres}"
+        )
 
-    text = (
-        f"🎬 <b>{film.title}</b>\n\n"
-        f"📝 <i>{film.description}</i>\n\n"
-        f"📂 Категории: {categories}\n"
-        f"🏷️ Жанры: {genres}"
-    )
+        state_data = await state.get_data()
+        keyboard = await get_film_keyboard(
+            back_from=state_data.get('back_from'),
+            back_id=state_data.get('back_id'),
+            telegram_id=telegram_id,
+            film_id=film_id,
+        )
 
-    state_data = await state.get_data()
-    keyboard = await get_film_keyboard(
-        back_from=state_data.get('back_from'),
-        back_id=state_data.get('back_id')
-    )
-
-    await callback.message.edit_text(
-        text,
-        reply_markup=keyboard,
-        parse_mode="HTML"
-    )
+        await callback.message.edit_text(
+            text,
+            reply_markup=keyboard,
+        )
     await callback.answer()
 
 

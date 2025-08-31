@@ -19,3 +19,6 @@ class FilmStates(StatesGroup):
     genre_selection = State()  # Выбор жанра
     genre_window = State()  # Окно жанра
     waiting_for_name_genre = State()  # Ожидание названия жанра
+
+    like_window = State()  # Окно лайков
+    admin_window = State()  # Окно админки

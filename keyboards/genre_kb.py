@@ -17,7 +17,7 @@ async def get_genre_selection_keyboard() -> InlineKeyboardMarkup:
             text=genre.name, callback_data=f'genre_{genre.id}')
 
     builder.button(text=' 🏠 Главное меню', callback_data='go_to_main')
-    builder.button(text=' ⬅️ Назад', callback_data='go_catogory_selection')
+    builder.button(text=' ⬅️ Назад', callback_data='select_film')
 
     if genres:
         genre_count = len(genres)

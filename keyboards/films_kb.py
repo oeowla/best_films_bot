@@ -1,23 +1,34 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from database.crud.user import check_like_exists
 from database.crud.category import get_films_in_category
 from database.crud.genre import get_films_in_genre
 from database.db import AsyncSessionLocal
 
+
 async def get_film_keyboard(
-        back_from: str, back_id: int) -> InlineKeyboardMarkup:
+    back_from: str, back_id: int, film_id: int, telegram_id: int
+) -> InlineKeyboardMarkup:
     """Клавиатура для экрана фильма"""
+    async with AsyncSessionLocal() as db:
+        is_liked = await check_like_exists(db, telegram_id, film_id)
+
     builder = InlineKeyboardBuilder()
 
-    builder.button(text=' 🏠 Главное меню', callback_data='go_to_main')
+    like_text = '💔 Убрать лайк' if is_liked else '❤️ Лайкнуть фильм'
+    builder.button(text=like_text, callback_data=f'toggle_like_{film_id}')
+
+    builder.button(text='🏠 Главное меню', callback_data='go_to_main')
 
     if back_from == 'genre':
-        builder.button(text=' ⬅️ Назад', callback_data=f'genre_{back_id}')
+        builder.button(text='⬅️ Назад', callback_data=f'genre_{back_id}')
     elif back_from == 'category':
-        builder.button(text=' ⬅️ Назад', callback_data=f'category_{back_id}')
+        builder.button(text='⬅️ Назад', callback_data=f'category_{back_id}')
+    elif back_from == 'like':
+        builder.button(text='⬅️ Назад', callback_data='my_like')
 
-    builder.adjust(2)
+    builder.adjust(2, 1)
     return builder.as_markup()
 
 
@@ -37,13 +48,12 @@ async def get_all_films_keyboard(
             text=film.title,
             callback_data=f'film_{film.id}'
         )
-
     builder.button(text=' 🏠 Главное меню', callback_data='go_to_main')
 
     if is_genre:
-        builder.button(text=' ⬅️ Назад', callback_data='go_genres_selection')
+        builder.button(text=' ⬅️ Назад', callback_data='genres')
     else:
-        builder.button(text=' ⬅️ Назад', callback_data='go_catogory_selection')
+        builder.button(text=' ⬅️ Назад', callback_data='select_film')
 
     if films:
         film_count = len(films)
@@ -51,7 +61,6 @@ async def get_all_films_keyboard(
 
         if remainder := film_count % 3:
             rows.append(remainder)
-
         rows.append(2)
         builder.adjust(*rows)
     else:

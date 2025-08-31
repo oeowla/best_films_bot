@@ -10,7 +10,7 @@ router = Router()
 
 
 @router.callback_query(
-    StateFilter(FilmStates.main_menu), F.data == 'create_category')
+    StateFilter(FilmStates.admin_window), F.data == 'create_category')
 async def new_category(callback: types.CallbackQuery, state: FSMContext):
     """Инициализация процесса добавления новой категории."""
     await callback.message.edit_text(

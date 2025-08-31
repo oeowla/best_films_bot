@@ -13,7 +13,8 @@ engine = create_async_engine(Config.DATABASE_URL, echo=True)
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
-    expire_on_commit=False
+    expire_on_commit=False,
+    autocommit=False
 )
 
 

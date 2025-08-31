@@ -1,4 +1,3 @@
-from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert
 
@@ -18,11 +17,11 @@ async def get_film_by_id(db: AsyncSession, film_id: int) -> Film | None:
 
 
 async def add_film(
-    db: AsyncSession, 
-    title: str, 
+    db: AsyncSession,
+    title: str,
     description: str,
-    category_ids: List[int], 
-    genre_ids: List[int]
+    category_ids: list[int],
+    genre_ids: list[int]
 ) -> Film:
     """Создание нового фильма"""
     new_film = Film(title=title, description=description)

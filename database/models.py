@@ -23,20 +23,20 @@ film_category = Table(
 
 user_film = Table(
     'user_film', Base.metadata,
-    Column('user_id', ForeignKey('user.id'), primary_key=True),
+    Column('user_id', ForeignKey('users.id'), primary_key=True),
     Column('film_id', ForeignKey('films.id'), primary_key=True),
 )
 
 user_category = Table(
-    'user_film', Base.metadata,
-    Column('user_id', ForeignKey('user.id'), primary_key=True),
-    Column('category_id', ForeignKey('category.id'), primary_key=True),
+    'user_category', Base.metadata,
+    Column('user_id', ForeignKey('users.id'), primary_key=True),
+    Column('category_id', ForeignKey('categories.id'), primary_key=True),
 )
 
 user_genre = Table(
-    'user_film', Base.metadata,
-    Column('user_id', ForeignKey('user.id'), primary_key=True),
-    Column('genre_id', ForeignKey('genre.id'), primary_key=True),
+    'user_genre', Base.metadata,
+    Column('user_id', ForeignKey('users.id'), primary_key=True),
+    Column('genre_id', ForeignKey('genres.id'), primary_key=True),
 )
 
 
@@ -74,7 +74,6 @@ class Film(Base):
         cascade='save-update, merge',
     )
 
-
     def __repr__(self) -> str:
         return f'Film(id={self.id}, title={self.title!r})'
 
@@ -97,7 +96,7 @@ class Genre(Base):
     )
 
     users: Mapped[List['User']] = relationship(
-        secondary=user_film,
+        secondary=user_genre,
         back_populates='genres',
         lazy='select',
         cascade='save-update, merge',
@@ -125,14 +124,15 @@ class Category(Base):
     )
 
     users: Mapped[List['User']] = relationship(
-        secondary=user_film,
+        secondary=user_category,
         back_populates='categories',
         lazy='select',
         cascade='save-update, merge',
     )
+
     def __repr__(self) -> str:
         return f'Category(id={self.id}, name={self.name!r})'
-    
+
 
 class User(Base):
     """Модель пользователя"""
@@ -141,7 +141,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(
         Integer, primary_key=True)
 
-    user_id: Mapped[int] = mapped_column(
+    telegram_id: Mapped[int] = mapped_column(
         Integer, unique=True)
 
     name: Mapped[str] = mapped_column(
@@ -149,7 +149,7 @@ class User(Base):
 
     is_admin: Mapped[bool] = mapped_column(
         Boolean, default=False)
-    
+
     films: Mapped[List['Film']] = relationship(
         secondary=user_film,
         back_populates='users',

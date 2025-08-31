@@ -14,7 +14,7 @@ router = Router()
 
 
 @router.callback_query(
-    StateFilter(FilmStates.main_menu), F.data == 'add_film')
+    StateFilter(FilmStates.admin_window), F.data == 'add_film')
 async def new_film(callback: types.CallbackQuery, state: FSMContext):
     """Начало добавления нового фильма"""
     await callback.message.edit_text(

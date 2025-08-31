@@ -7,17 +7,13 @@ async def get_main_keyboards() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     builder.button(
-        text=' 🎥 Добавить фильм', callback_data='add_film')
+        text='🎬 Выбрать фильм', callback_data='select_film')
     builder.button(
-        text=' 🎥 Создать категорию', callback_data='create_category')
-    builder.button(
-        text=' 🎥 Создать жанр', callback_data='create_genre')
-    builder.button(
-        text=' 🎬 Выбрать фильм', callback_data='select_film')
+        text='𓆩❤︎𓆪 Мои лайки', callback_data='my_like')
     builder.button(
         text='❓ Помощь', callback_data='help')
 
-    builder.adjust(3, 2)
+    builder.adjust(1, 2)
     return builder.as_markup()
 
 

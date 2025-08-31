@@ -9,9 +9,11 @@ from config import config
 from handlers import (
     base_handlers, films_handlers, category_handlers, genre_handlers
 )
-from handlers.user_handlers import (
-    create_category_handlers, create_film_handlers, create_genre_handlers
+from handlers.admin import (
+    create_category_handlers, create_film_handlers,
+    create_genre_handlers, admin_handlers
 )
+from handlers.user_handlers import my_like_handlers
 
 
 async def main():
@@ -29,6 +31,8 @@ async def main():
     dp.include_router(create_film_handlers.router)
     dp.include_router(create_category_handlers.router)
     dp.include_router(create_genre_handlers.router)
+    dp.include_router(admin_handlers.router)
+    dp.include_router(my_like_handlers.router)
 
     # Установка команд меню бота
     await bot.set_my_commands([

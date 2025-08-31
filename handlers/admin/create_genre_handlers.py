@@ -10,7 +10,7 @@ router = Router()
 
 
 @router.callback_query(
-    StateFilter(FilmStates.main_menu), F.data == 'create_genre')
+    StateFilter(FilmStates.admin_window), F.data == 'create_genre')
 async def new_genre(callback: types.CallbackQuery, state: FSMContext):
     """Инициализация процесса добавления нового жанра."""
     await callback.message.edit_text(
