@@ -24,15 +24,12 @@ async def start_category_selection(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.callback_query(
-        StateFilter(FilmStates.category_selection),
-        F.data.startswith('toggle_like_'))
+@router.callback_query(F.data.startswith('toggle_like_'))
 async def handle_like_toggle(
     callback: CallbackQuery, state: FSMContext
 ):
     film_id = int(callback.data.split('_')[-1])
     telegram_id = callback.from_user.id
-
     await state.update_data({
         'back_from': 'like',
     })
