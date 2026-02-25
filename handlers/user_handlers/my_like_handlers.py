@@ -1,7 +1,6 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
 
 from database.db import AsyncSessionLocal
 from database.crud.user import get_user, toggle_like

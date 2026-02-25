@@ -52,3 +52,32 @@
 - Создание и управление категориями
 - Создание и управление жанрами
 - Полный доступ ко всему контенту
+
+
+## Разветрывание(локально)
+1. Установка Python и виртуального окружения
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+2. Установка зависимостей
+```bash
+pip install -r requirements.txt
+```
+3. Настройка переменных окружения
+Создайте файл .env в корневой директории:
+
+```env
+BOT_TOKEN=токен бота
+DATABASE_URL='sqlite+aiosqlite:///database.db'
+ADMIN_IDS=айди администраторов
+```
+4. Запуск сервера разработки
+```bash
+python main.py
+```
